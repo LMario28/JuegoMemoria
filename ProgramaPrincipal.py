@@ -182,7 +182,7 @@ while True:
             boton_seleccionado_azar = random.randint(1,NUMERO_BOTONES)
             secuencia.append(boton_seleccionado_azar)
             apagarLEDs()
-            sleep(0.5)
+            sleep(0.3)
             encenderLEDs(boton_seleccionado_azar-1)
             sleep(2)
           apagarLEDs()
