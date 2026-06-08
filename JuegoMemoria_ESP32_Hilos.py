@@ -1,3 +1,20 @@
+# NOTAS:
+
+# 1) Pasos para actualizar el sketch en el ESP32
+
+#    Requisitos: 1) Debe estar en donde está la aplicación el sketch ota.py;
+#                2) En GitHub, repositorio Aro debe existir  un arhivo con nombre version.json con las lineas:
+#                   {
+#                     "version":2
+#                   }
+#                   el número de la versión debe ser mayor que el mismo archivo en el ESP32
+
+#    a) Abrir www.github.com
+#    b) lmmsegura@hotmail.com / le...24
+#    c) Copiar la nueva versión del sketch a GitHub, repositorio JuegoMemoria
+
+# 2) Correr con al menos MicroPython v.1.27
+
 # JuegoMemoria_ESP32_Hilos.py
 # Versión con hilos para comunicación PC y juego simultáneo
 
@@ -172,10 +189,15 @@ def conectar_wifi():
     pass
     
   # Configurar IP FIJA
-  IP_FIJA = "192.168.0.110"
+#   IP_FIJA = "192.168.0.111"
+#   MASCARA = "255.255.255.0"
+#   GATEWAY = "192.168.0.1"
+#   DNS = "192.168.0.1"
+  # CASA
+  IP_FIJA = "192.168.1.110"
   MASCARA = "255.255.255.0"
-  GATEWAY = "192.168.0.1"
-  DNS = "192.168.0.1"
+  GATEWAY = "192.168.1.254"
+  DNS = "192.168.1.254"
 
   wlan.ifconfig((IP_FIJA, MASCARA, GATEWAY, DNS))
 
@@ -314,9 +336,13 @@ def hilo_servidor():
         try:
           nuevo_cliente, dir = server_socket.accept()
           cliente_socket = nuevo_cliente
+          # === DESHABILITAR BUFFER (Nagle) ===
+          # Esto hace que los mensajes se envíen inmediatamente
+          cliente_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
+          # ===================================
           bandera_cliente_conectado = True
           print(f"✅ [HILO] PC conectada: {dir}")
-          cliente_socket.send("OK_CONECTADO\n")
+          cliente_socket.send("OK_CONECTADO")
         except OSError:
           pass  # Timeout normal
             
@@ -330,7 +356,7 @@ def hilo_servidor():
             print(f"📥 [HILO] Recibido: {datos}")
             respuesta = procesar_comando(datos)
             if respuesta:
-              cliente_socket.send(f"{respuesta}\n")
+              cliente_socket.send(f"{respuesta}")
               print(f"📤 [HILO] Respuesta: {respuesta}")
           else:
             print("❌ [HILO] PC desconectada")
@@ -360,7 +386,6 @@ def jugar():
 
     if not bandera_jugando:
         # Generar y mostrar secuencia
-        print(f"🎮 Generando secuencia para nivel {nivel_actual_juego}")
         secuencia = []
         for i in range(nivel_actual_juego):
             boton = random.randint(1, NUMERO_BOTONES)
@@ -378,10 +403,12 @@ def jugar():
         
     else:
         # Verificar tiempo límite
-        if time.time() - momento_empezo_juego > 30:
+        if time.time() - momento_empezo_juego > 25:
             encenderLEDs(6)
             bandera_jugando = False
-            print("⏰ Tiempo agotado")
+            print("Tiempo agotado")
+            cliente_socket.send("JUEGO PERDIDO")
+            print("Enviado a la PC: JUEGO PERDIDO")
             time.sleep(3)
             apagarLEDs()
             return
@@ -402,19 +429,19 @@ def jugar():
                         boton_oprimido = i + 1
                         if secuencia[posicion_secuencia] == boton_oprimido:
                             print(f"✅ Correcto: {boton_oprimido}")
-                            if bandera_cliente_conectado and cliente_socket:
-                                try:
-                                    cliente_socket.send("FEEDBACK_CORRECTO\n")
-                                except:
-                                    pass
+#                             if bandera_cliente_conectado and cliente_socket:
+#                                 try:
+#                                     cliente_socket.send("FEEDBACK_CORRECTO\n")
+#                                 except:
+#                                     pass
                         else:
                             print(f"❌ Incorrecto: esperaba {secuencia[posicion_secuencia]}, presionó {boton_oprimido}")
                             bandera_boton_erroneo = True
-                            if bandera_cliente_conectado and cliente_socket:
-                                try:
-                                    cliente_socket.send("FEEDBACK_INCORRECTO\n")
-                                except:
-                                    pass
+#                             if bandera_cliente_conectado and cliente_socket:
+#                                 try:
+#                                     cliente_socket.send("FEEDBACK_INCORRECTO\n")
+#                                 except:
+#                                     pass
                         
                         posicion_secuencia += 1
                         break
@@ -422,18 +449,21 @@ def jugar():
             # Fin de la ronda
             if not bandera_boton_erroneo:
                 encenderLEDs(5)  # Éxito
-                print("🎉 ¡Ronda completada!")
+                print("¡Juego ganado!")
                 if bandera_cliente_conectado and cliente_socket:
                     try:
-                        cliente_socket.send("RONDA_COMPLETADA\n")
+                        cliente_socket.send("JUEGO GANADO")
+                        time.sleep_ms(200)     #DELAY
+                        print("Enviado a la PC: JUEGO GANADO")
                     except:
                         pass
             else:
                 encenderLEDs(6)  # Fracaso
-                print("💀 Juego perdido!")
                 if bandera_cliente_conectado and cliente_socket:
                     try:
-                        cliente_socket.send("JUEGO_PERDIDO\n")
+                        cliente_socket.send("JUEGO PERDIDO")
+                        time.sleep_ms(200)     #DELAY
+                        print("Enviado a la PC: JUEGO PERDIDO")
                     except:
                         pass
             
@@ -486,7 +516,7 @@ def main():
 
   # 6. BUCLE PRINCIPAL DEL JUEGO
   print("🎮 Bucle principal del juego iniciado...")
-  print("💡 Presiona el botón 3 (pin 2) para comenzar a jugar")
+  print("💡 Presiona el botón parpareando (2 seg) para comenzar a jugar")
 
   while True:
     try:
@@ -504,6 +534,8 @@ def main():
              apagarLEDs()
              time.sleep(0.5)
              print("\n🎮 Iniciando juego...")
+             cliente_socket.send("JUGANDO")
+             print("ENVIADO A LA PC: JUGANDO")
              jugar()
       else:
         jugar()
