@@ -189,15 +189,15 @@ def conectar_wifi():
     pass
     
   # Configurar IP FIJA
-#   IP_FIJA = "192.168.0.111"
-#   MASCARA = "255.255.255.0"
-#   GATEWAY = "192.168.0.1"
-#   DNS = "192.168.0.1"
-  # CASA
-  IP_FIJA = "192.168.1.110"
+  IP_FIJA = "192.168.0.110"
   MASCARA = "255.255.255.0"
-  GATEWAY = "192.168.1.254"
-  DNS = "192.168.1.254"
+  GATEWAY = "192.168.0.1"
+  DNS = "192.168.0.1"
+#  # CASA
+#  IP_FIJA = "192.168.1.110"
+#  MASCARA = "255.255.255.0"
+#  GATEWAY = "192.168.1.254"
+#  DNS = "192.168.1.254"
 
   wlan.ifconfig((IP_FIJA, MASCARA, GATEWAY, DNS))
 
