@@ -189,7 +189,7 @@ def conectar_wifi():
     pass
     
 # Configurar IP FIJA
-  IP_FIJA = "192.168.0.111"
+  IP_FIJA = "192.168.0.110"
   MASCARA = "255.255.255.0"
   GATEWAY = "192.168.0.1"
   DNS = "192.168.0.1"
@@ -557,7 +557,6 @@ def main():
                  print("Enviado a la PC: JUEGO PERDIDO")
                except:
                  pass
-             jugar()
       else:
         jugar()
 
