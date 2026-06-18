@@ -189,7 +189,7 @@ def conectar_wifi():
     pass
     
 # Configurar IP FIJA
-  IP_FIJA = "192.168.0.110"
+  IP_FIJA = "192.168.0.111"
   MASCARA = "255.255.255.0"
   GATEWAY = "192.168.0.1"
   DNS = "192.168.0.1"
@@ -407,9 +407,14 @@ def jugar():
             encenderLEDs(6)
             bandera_jugando = False
             print("Tiempo agotado")
-            cliente_socket.send("JUEGO PERDIDO")
-            print("Enviado a la PC: JUEGO PERDIDO")
-            time.sleep(3)
+            if bandera_cliente_conectado and cliente_socket:
+              try:
+                cliente_socket.send("JUEGO PERDIDO")
+                time.sleep_ms(200)     #DELAY
+                print("Enviado a la PC: JUEGO PERDIDO")
+              except:
+                pass
+            time.sleep(4)
             apagarLEDs()
             return
         
