@@ -406,7 +406,7 @@ def jugar():
         if time.time() - momento_empezo_juego > 25:
             encenderLEDs(6)
             bandera_jugando = False
-            print("Tiempo agotado")
+            print("Tiempo agotado. Juego perdido")
             if bandera_cliente_conectado and cliente_socket:
               try:
                 cliente_socket.send("JUEGO PERDIDO")
